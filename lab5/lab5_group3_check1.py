@@ -26,11 +26,8 @@ try:
 except:
     print("An exception occurred")
 
-
 s.listen(1)
 
-#print('listening on', addr)
-#
 def get_text(s):
     for k, c in enumerate(s):
         text = ''
@@ -51,21 +48,17 @@ while True:
     print('client connected from', addr)
     cl_file = cl.makefile('rwb', 0)
     content = cl.recv(1024).decode("utf-8")
-    # print("1")
-    # print(content)
     text = get_text(content)
-    cl.close()
-    print(text)
     oled.fill(0)
     oled.text("Command:", 0, 0)
     oled.text(text, 0, 10)
     oled.show()
-# while True:
-#     line = cl_file.readline()
-#     # if not line or line == b'\r\n':
-#     #     break
-#     print("line:     ",get_text(line))
-#
+    while True:
+        line = cl_file.readline()
+        if not line or line == b'\r\n':
+            break
+    cl.close()
+    print(text)
 #     break
 #rows = ['<tr><td>%s</td><td>%d</td></tr>' % (str(p), p.value()) for p in pins]
 #response = html % '\n'.join(rows)
