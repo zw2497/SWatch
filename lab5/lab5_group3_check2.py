@@ -1,13 +1,15 @@
 import machine
 import ssd1306
 import socket
+
+pins = [machine.Pin(i, machine.Pin.IN) for i in (0, 2, 4, 5, 12, 13, 14, 15)]
+
 i2c = machine.I2C(-1, machine.Pin(5), machine.Pin(4))
 oled = ssd1306.SSD1306_I2C(128, 32, i2c)
 
 settime = (2018, 9, 26, 1, 1, 1, 50, 1)
 rtc = machine.RTC()
 rtc.datetime(settime)
-
 
 def do_connect():
     import network
@@ -16,6 +18,7 @@ def do_connect():
     if not wlan.isconnected():
         print('connecting to network...')
         wlan.connect(b"iPhone (63)","12345678")
+        #wlan.connect(b"sun", "12345678")
         while not wlan.isconnected():
             pass
     print('network config:', wlan.ifconfig())
@@ -24,14 +27,15 @@ do_connect()
 
 addr = socket.getaddrinfo('0.0.0.0', 8088)[0][-1]
 s = socket.socket()
-s.settimeout(0.5)
+
 
 try:
     s.bind(addr)
 except:
     print("An exception occurred")
 
-s.listen(1)
+s.listen(10)
+s.settimeout(0.5)
 
 def get_text(s):
     for k, c in enumerate(s):
@@ -47,29 +51,40 @@ def get_text(s):
             break
     return text
 
+
 text = ""
 
 while True:
     oled.fill(0)
-    flag = False
-    
     try:
         cl, addr = s.accept()
-    except :
+    except OSError:
         pass
-    
-    try:
-        cl_file = cl.makefile('rwb', 0)
+    else:
         content = cl.recv(1024).decode("utf-8")
         text = get_text(content)
-        while True:
-            line = cl_file.readline()
-            if not line or line == b'\r\n':
-                break
+        
+        if text[0:7] == 'turn on':
+            oled = ssd1306.SSD1306_I2C(128, 32, i2c)
+            print("i am in turn on")
+            
+            response = "HTTP/1.1 200 OK\n" + "Content-Type: text/html\n" + "\n" + "<html><body>Turn on display</body></html>\n"
+            cl.send(str.encode(response))
+            cl.close()
+
+        elif text[0:8] == 'turn off':
+            oled.poweroff()
+            print("i am in turn off")
+            
+            response = "HTTP/1.1 200 OK\n" + "Content-Type: text/html\n" + "\n" + "<html><body>Turn off display</body></html>\n"
+            cl.send(str.encode(response))
+            cl.close()
+
+else:
+    
+    response = "HTTP/1.1 200 OK\n" + "Content-Type: text/html\n" + "\n" + "<html><body>Hello World</body></html>\n"
+        cl.send(str.encode(response))
         cl.close()
-        print(text)
-    except:
-        pass
 
     oled.text(text, 0, 20)
     displaytime = rtc.datetime()
@@ -77,7 +92,4 @@ while True:
               str(displaytime[0]) + '/' + str(displaytime[1]) + '/' + str(displaytime[2]) + 'Week:' + str(displaytime[3]), 0,
               0)
 oled.text(str(displaytime[4]) + ':' + str(displaytime[5]) + ':' + str(displaytime[6]), 0, 10)
-
 oled.show()
-
-

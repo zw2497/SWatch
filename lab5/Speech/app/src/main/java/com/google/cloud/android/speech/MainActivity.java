@@ -42,6 +42,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import com.loopj.android.http.*;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 
 import cz.msebera.android.httpclient.Header;
@@ -141,21 +142,41 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
                 String text = a.get(0);
                 RequestParams params = new RequestParams();
                 params.put("content", text);
-                Log.i(text,"textcount");
+                Log.i(text,"textcount12");
+
 
                 Send.get("", params, new AsyncHttpResponseHandler() {
                     @Override
                     public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-                        Log.i("success","success");
-                        Log.i(headers[0].getValue());
-                        Log.i(res)
+                        Log.i("success","success12");
+                        String str = new String(responseBody);
+                        mAdapter.addResult("%%success Connection");
+                        mAdapter.addResult(str);
+                        mRecyclerView.smoothScrollToPosition(0);
 
                     }
 
                     @Override
                     public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-                        Log.i("Failed","failed");
+                        Log.i("Failed12","failed12");
+                        mAdapter.addResult("%%Failed");
+                        mRecyclerView.smoothScrollToPosition(0);
                     }
+
+                    @Override
+                    public void onRetry(int retryNo) {
+                        Log.i("Retry12","Retry12");
+                        mAdapter.addResult("%%Retry");
+                        mRecyclerView.smoothScrollToPosition(0);
+                    }
+
+                    @Override
+                    public void onCancel() {
+                        Log.i("Cancel12","Cancel12");
+                        mAdapter.addResult("%%Cancel");
+                        mRecyclerView.smoothScrollToPosition(0);
+                    }
+
                 });
 
 
